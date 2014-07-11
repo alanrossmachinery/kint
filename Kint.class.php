@@ -618,15 +618,6 @@ class Kint
 
 			if ( self::_stepIsInternal( $step ) ) {
 				$previousCaller = $prevStep;
-
-				if ( isset( $step['function'] )
-					&& !isset( $step['file'] ) && !isset( $step['line'] )
-					&& isset( $prevStep['file'] ) && isset( $prevStep['line'] )
-				) {
-					$step['file'] = $prevStep['file'];
-					$step['line'] = $prevStep['line'];
-				}
-
 				break;
 			} elseif ( isset( $step['file'], $step['line'] ) ) {
 				unset( $step['object'], $step['args'] );
@@ -682,15 +673,6 @@ class Kint
 				if ( !$valid && isset( $step['function'] )
 					&& substr( $step['function'], -9, 9 ) === '{closure}'
 				) {
-					$valid = true;
-				}
-
-				if ( !$valid && isset( $step['function'] )
-					&& !isset( $step['file'] ) && !isset( $step['line'] )
-					&& isset( $trace[0]['file'] ) && isset( $trace[0]['line'] )
-				) {
-					$step['file'] = $trace[0]['file'];
-					$step['line'] = $trace[0]['line'];
 					$valid = true;
 				}
 			}
