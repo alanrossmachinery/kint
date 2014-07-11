@@ -14,31 +14,6 @@ require KINT_DIR . 'decorators/plain.php';
 require KINT_DIR . 'decorators/whitespace.php';
 require KINT_DIR . 'decorators/concise.php';
 
-if ( is_readable( KINT_DIR . 'config.php' ) ) {
-	require KINT_DIR . 'config.php';
-}
-
-# init settings
-if ( !empty( $GLOBALS['_kint_settings'] ) ) {
-	foreach ( $GLOBALS['_kint_settings'] as $key => $val ) {
-		property_exists( 'Kint', $key ) and Kint::$$key = $val;
-	}
-
-	unset( $GLOBALS['_kint_settings'] );
-}
-
-if ( PHP_SAPI === 'cli' ) {
-	Kint::$_detected = 'cli';
-} elseif ( Kint::$ajaxDetection && isset( $_SERVER['HTTP_X_REQUESTED_WITH'] )
-	&& strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) === 'xmlhttprequest'
-) {
-	Kint::$_detected = 'ajax';
-}
-
-if ( Kint::$ajaxDetection && Kint::$_detected !== 'ajax' && Kint::$_detected !== 'cli' ) {
-	register_shutdown_function( 'Kint::_ajaxHandler' );
-}
-
 class Kint
 {
 	// these are all public and 1:1 config array keys so you can switch them easily
@@ -88,6 +63,74 @@ class Kint
 
 	private static $_label;
 
+	private static $_inited = false;
+
+	/**
+	 * Configure and initialize Kint
+	 *
+	 * @param array [OPTIONAL] $config see Kint::configure() for details
+	 * @see configure()
+	 */
+	public static function init( array $config = array() )
+	{
+		if ( self::$_inited ) {
+			return;
+		}
+
+		if ( is_readable( KINT_DIR . 'config.php' ) ) {
+			require KINT_DIR . 'config.php';
+		}
+
+		$config += $GLOBALS['_kint_settings'];
+		unset( $GLOBALS['_kint_settings'] );
+
+		self::configure( $config );
+
+		if ( PHP_SAPI === 'cli' ) {
+			self::$_detected = 'cli';
+		} elseif ( self::$ajaxDetection && isset( $_SERVER['HTTP_X_REQUESTED_WITH'] )
+			&& strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) === 'xmlhttprequest'
+		) {
+			self::$_detected = 'ajax';
+		}
+
+		if ( self::$ajaxDetection && self::$_detected !== 'ajax' && self::$_detected !== 'cli' ) {
+			register_shutdown_function( 'Kint::_ajaxHandler' );
+		}
+
+		self::$_inited = true;
+	}
+
+	/**
+	 * Configure Kint
+	 *
+	 * Each key in $config maps to a public property of this class.
+	 * See config.default.php for more info.
+	 *
+	 * @param array [OPTIONAL] $config
+	 */
+	public static function configure( array $config = array() )
+	{
+		static $publicProperties = null;
+
+		if ( $publicProperties === null ) {
+			$reflection = new ReflectionClass('Kint');
+			$properties = $reflection->getProperties(ReflectionProperty::IS_STATIC|ReflectionProperty::IS_PUBLIC);
+
+			$publicProperties = array();
+
+			foreach ( $properties as $property ) {
+				$publicProperties[$property->getName()] = true;
+			}
+		}
+
+		foreach ( $config as $key => $val ) {
+			if( !empty( $publicProperties[$key] ) ) {
+				self::$$key = $val;
+			}
+		}
+	}
+
 	/**
 	 * getter/setter for the enabled parameter, called at the beginning of every public function as getter, also
 	 * initializes the settings if te first time it's run.
@@ -98,6 +141,8 @@ class Kint
 	 */
 	public static function enabled( $value = null )
 	{
+		self::init();
+
 		# act both as a setter...
 		if ( func_num_args() > 0 ) {
 			self::$enabled = $value;
