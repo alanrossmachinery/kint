@@ -289,7 +289,10 @@ class Kint
 	 * @return void|string
 	 * @see dump()
 	 */
-	public static function dumpLabeled( $label, $data = null ) {
+	public static function dumpLabeled( $label, $data = null )
+	{
+		if ( !Kint::enabled() ) return '';
+
 		self::$_label = $label;
 		$args = func_get_args();
 		array_shift($args);
