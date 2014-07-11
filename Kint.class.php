@@ -69,6 +69,7 @@ class Kint
 	public static $aliases = array(
 		'methods'   => array(
 			array( 'kint', 'dump' ),
+			array( 'kint', 'dumpLabeled' ),
 			array( 'kint', 'trace' ),
 		),
 		'functions' => array(
@@ -84,6 +85,8 @@ class Kint
 
 	# non-standard function calls
 	protected static $_statements = array( 'include', 'include_once', 'require', 'require_once' );
+
+	private static $_label;
 
 	/**
 	 * getter/setter for the enabled parameter, called at the beginning of every public function as getter, also
@@ -108,15 +111,16 @@ class Kint
 	/**
 	 * Prints a debug backtrace, same as `Kint::dump(1)`
 	 *
-	 * @param array $trace [OPTIONAL] you can pass your own trace, otherwise, `debug_backtrace` will be called
+	 * @param array  $trace [OPTIONAL] you can pass your own trace, otherwise, `debug_backtrace` will be called
+	 * @param string $label [OPTIONAL] a descriptive label
 	 *
 	 * @return void
 	 */
-	public static function trace( $trace = null )
+	public static function trace( $trace = null, $label = null )
 	{
 		if ( !Kint::enabled() ) return;
 
-		return self::dump( isset( $trace ) ? $trace : debug_backtrace( true ) );
+		return self::dumpLabeled( $label, isset( $trace ) ? $trace : debug_backtrace( true ) );
 	}
 
 
@@ -215,6 +219,11 @@ class Kint
 		}
 		$trace and $trace = self::_parseTrace( $trace );
 
+		if ( self::$_label ) {
+		  $output .= $decorator::decorateLabel( self::$_label );
+		  self::$_label = null;
+		}
+
 		if ( $trace ) {
 			$output .= $decorator::decorateTrace( $trace );
 		} else {
@@ -271,6 +280,22 @@ class Kint
 		return '';
 	}
 
+	/**
+	 * Dump information about variables, with a descriptive label
+	 *
+	 * @param string $label a descriptive label
+	 * @param mixed $data
+	 *
+	 * @return void|string
+	 * @see dump()
+	 */
+	public static function dumpLabeled( $label, $data = null ) {
+		self::$_label = $label;
+		$args = func_get_args();
+		array_shift($args);
+
+		return call_user_func_array( array( 'Kint', 'dump' ), $args );
+	}
 
 	/**
 	 * generic path display callback, can be configured in the settings; purpose is to show relevant path info and hide

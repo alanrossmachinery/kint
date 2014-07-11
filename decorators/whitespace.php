@@ -1,6 +1,10 @@
 <?php
 class Kint_Decorators_Whitespace extends Kint
 {
+  public static function decorateLabel( $label ) {
+    return $label . "\n";
+  }
+
 	public static function decorate( kintVariableData $kintVar, $level = 0 )
 	{
 		$output = '';

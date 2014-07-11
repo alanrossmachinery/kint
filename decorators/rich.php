@@ -4,6 +4,12 @@ class Kint_Decorators_Rich extends Kint
 	# make calls to Kint::dump() from different places in source coloured differently.
 	private static $_usedColors = array();
 
+	public static function decorateLabel( $label ) {
+	  $output = '<header class="kint-label">' . $label . '</header>';
+
+	  return $output;
+	}
+
 	public static function decorate( kintVariableData $kintVar )
 	{
 		$output = '<dl>';
