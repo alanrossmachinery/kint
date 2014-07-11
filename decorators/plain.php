@@ -2,6 +2,12 @@
 // todo make cli, plain and whitespace decorators DRY
 class Kint_Decorators_Plain extends Kint
 {
+	public static function decorateLabel( $label ) {
+	  $output = '<header class="kint-label">' . $label . '</header>';
+
+	  return $output;
+	}
+
 	public static function decorate( kintVariableData $kintVar, $level = 0 )
 	{
 		$output = '';

@@ -3,6 +3,10 @@ class Kint_Decorators_Cli extends Kint
 {
 	private static $_enableColors;
 
+  public static function decorateLabel( $label ) {
+    return $label . "\n";
+  }
+
 	public static function decorate( kintVariableData $kintVar, $level = 0 )
 	{
 		self::_init();
